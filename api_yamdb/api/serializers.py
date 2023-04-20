@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.core.exceptions import ValidationError
 
 from reviews.models import Category, Genre, Title, GenreTitle, Review, Comment
 
@@ -38,7 +39,7 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ('id', 'name', 'slug', 'titles')
-      
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
@@ -49,6 +50,12 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
+
+    def validate_score(value):
+        if 0 < value < 11:
+            raise ValidationError(
+                'Рейтинг должен быть от 1 до 10.'
+            )
 
 
 class CommentSerializer(serializers.ModelSerializer):
