@@ -38,7 +38,7 @@ class Title(models.Model):
     rating = models.IntegerField(default=0)
     description = models.TextField(
         'Описание',
-        help_text='Описание произведения',
+        help_text='Описанdие произведения',
     )
     genre = models.ManyToManyField(Genre, through='GenreTitle')
     category = models.ForeignKey(
