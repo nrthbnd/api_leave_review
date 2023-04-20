@@ -1,8 +1,10 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
-
 User = get_user_model()
+
+SCORE_LIMIT = [(i, i) for i in range(1, 11)]
+
 
 class Genre(models.Model):
     name = models.CharField(max_length=256)
@@ -10,6 +12,10 @@ class Genre(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    class Meta:
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
 
 
 class Category(models.Model):
@@ -19,14 +25,17 @@ class Category(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+
 
 class Title(models.Model):
     name = models.CharField(max_length=200)
     year = models.IntegerField(
         verbose_name='Год создания',
-        validators=[validate_year],
     )
-    rating = 1
+    rating = models.IntegerField(default=0)
     description = models.TextField(
         'Описание',
         help_text='Описание произведения',
@@ -43,6 +52,7 @@ class Title(models.Model):
 
     class Meta:
         verbose_name = 'Название произведения'
+        verbose_name_plural = 'Название произведении'
         ordering = ['-year']
 
     def __str__(self) -> str:
@@ -71,10 +81,21 @@ class Review(models.Model):
         verbose_name='Текст отзыва',
         help_text='Текст нового отзывы',
     )
-    title = 1  # после написания модели Title
-    author = 'Вася'  # после написания модели User
-    score_limit = [(i, i) for i in range(1, 11)]
-    score = models.IntegerField(choices=score_limit)
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Название произведения',
+        help_text='Название произведения',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='author',
+        verbose_name='Автор',
+        help_text='Что то про автора',
+    )
+    score = models.IntegerField(choices=SCORE_LIMIT)
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации',
         auto_now_add=True,
@@ -91,8 +112,20 @@ class Comment(models.Model):
         verbose_name='Текст комментария',
         help_text='Текст нового комментария',
     )
-    title = 1  # после написания модели Title
-    author = 'Вася'  # после написания модели User
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name='comment',
+        verbose_name='Название произведения',
+        help_text='Название произведения',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='authors',
+        verbose_name='Автор',
+        help_text='Что то про автора',
+    )
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации',
         auto_now_add=True,
