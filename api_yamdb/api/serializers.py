@@ -1,3 +1,4 @@
+import datetime
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
 
@@ -5,7 +6,6 @@ from reviews.models import Category, Genre, Title, GenreTitle, Review, Comment
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    # titles = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Genre
@@ -13,7 +13,6 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    # category = serializers.StringRelatedField(read_only=True)
     genre = GenreSerializer(many=True, required=False)
     description = serializers.StringRelatedField(required=False)
 
@@ -21,15 +20,19 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
         fields = ('id', 'name', 'year', 'description', 'genre', 'category')
 
+    def validate_year(value):
+        current_year = datetime.date.today().year
+        if value > current_year or value < 1800:
+            raise ValidationError(
+                'Год должен быть меньше или равен текущему, но больше 1800.'
+            )
+
     def create(self, validated_data):
-        if 'genre' not in self.initial_data:
-            name = Title.objects.create(**validated_data)
-            return name
-        genres = validated_data.pop('genre')
+        genre = validated_data.pop('genre')
         name = Title.objects.create(**validated_data)
-        for genre in genres:
-            current_genre, status = Genre.objects.get_or_create(**genre)
-            GenreTitle.objects.create(genre=current_genre, name=name)
+        for item in genre:
+            current_genre, status = Genre.objects.get_or_create(**item)
+            GenreTitle.objects.create(item=current_genre, name=name)
         return name
 
 
@@ -52,7 +55,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
     def validate_score(value):
-        if 0 < value < 11:
+        if value < 1 or value > 10:
             raise ValidationError(
                 'Рейтинг должен быть от 1 до 10.'
             )
