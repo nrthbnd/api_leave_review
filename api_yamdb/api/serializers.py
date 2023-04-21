@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from reviews.models import Category, Genre, Title, GenreTitle, Review, Comment
 
 
-class EmailSerializer(serializers.Serializer):
+class ConfirmationSerializer(serializers.Serializer):
     username = serializers.CharField()
     email = serializers.EmailField()
 
