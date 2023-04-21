@@ -1,28 +1,35 @@
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
 
-from reviews.models import Category, Genre, Title, Comment, Review
+from reviews.models import Category, Genre, Title, Comment, Review, User
 from .serializers import (
     CategorySerializer, GenreSerializer, TitleSerializer,
-    CommentSerializer, ReviewSerializer, EmailSerializer)
+    CommentSerializer, ReviewSerializer, ConfirmationSerializer)
 
 
-class EmailView(APIView):
+class ConfirmationView(APIView):
     def post(self, request):
-        serializer = EmailSerializer(data=request.data)
+        serializer = ConfirmationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data['username']
-        email = serializer.validated_data['email']
+        user = User.objects.get_or_create(
+            username=serializer.validated_data['username'],
+            email=serializer.validated_data['email'],
+        )[0]
+        code = default_token_generator.make_token(user)
         send_mail(
-            'Subject here',
-            'Here is the message.',
-            'from@example.com',
-            [email],
+            'Код получения токена',
+            f'Ваш код: {code}',
+            'user@ya.ru',
+            [user.email],
             fail_silently=False,
         )
-        return Response({"email": email, "username": username})
+        return Response(
+            {"email": user.email, "username": user.username},
+            status=status.HTTP_200_OK
+        )
 
 
 class TitleViewSet(viewsets.ModelViewSet):
