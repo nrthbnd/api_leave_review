@@ -25,6 +25,8 @@ router.register(
 )
 
 urlpatterns = [
-    path('v1/', include(router.urls)),
-    path('v1/auth/signup/', ConfirmationView.as_view()),
+    path('', include(router.urls)),
+    path('auth', include('djoser.urls')),
+    path('auth', include('djoser.urls.jwt')),
+    path('auth/signup/', ConfirmationView.as_view()),
 ]
