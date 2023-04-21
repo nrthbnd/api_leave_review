@@ -1,9 +1,28 @@
 from rest_framework import viewsets, mixins
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.core.mail import send_mail
 
 from reviews.models import Category, Genre, Title, Comment, Review
 from .serializers import (
     CategorySerializer, GenreSerializer, TitleSerializer,
-    CommentSerializer, ReviewSerializer)
+    CommentSerializer, ReviewSerializer, EmailSerializer)
+
+
+class EmailView(APIView):
+    def post(self, request):
+        serializer = EmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data['username']
+        email = serializer.validated_data['email']
+        send_mail(
+            'Subject here',
+            'Here is the message.',
+            'from@example.com',
+            [email],
+            fail_silently=False,
+        )
+        return Response({"email": email, "username": username})
 
 
 class TitleViewSet(viewsets.ModelViewSet):
