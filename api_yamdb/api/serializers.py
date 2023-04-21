@@ -4,6 +4,11 @@ from django.core.exceptions import ValidationError
 from reviews.models import Category, Genre, Title, GenreTitle, Review, Comment
 
 
+class EmailSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    email = serializers.EmailField()
+
+
 class GenreSerializer(serializers.ModelSerializer):
     # titles = serializers.StringRelatedField(many=True, read_only=True)
 
