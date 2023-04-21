@@ -10,11 +10,11 @@ app_name = 'api'
 
 router = SimpleRouter()
 
-router.register('titles', TitleViewSet)
-router.register('genres', GenreViewSet)
-router.register('categories', CategoryViewSet)
+router.register('v1/titles', TitleViewSet)
+router.register('v1/genres', GenreViewSet)
+router.register('v1/categories', CategoryViewSet)
 router.register(
-    r'titles/(?P<titles_id>\d+)/reviews',
+    r'v1/titles/(?P<titles_id>\d+)/reviews',
     CommentViewSet,
     basename='reviews',
 )
@@ -26,7 +26,7 @@ router.register(
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('auth', include('djoser.urls')),
-    path('auth', include('djoser.urls.jwt')),
-    path('auth/signup/', ConfirmationView.as_view()),
+    path('v1/', include('djoser.urls')),
+    path('v1/', include('djoser.urls.jwt')),
+    path('v1/auth/signup/', ConfirmationView.as_view()),
 ]
