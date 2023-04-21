@@ -1,7 +1,10 @@
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 
-from api.views import CategoryViewSet, GenreViewSet, TitleViewSet, CommentViewSet, ReviewViewSet
+from api.views import (
+    CategoryViewSet, GenreViewSet, TitleViewSet, CommentViewSet, ReviewViewSet,
+    EmailView
+)
 
 app_name = 'api'
 
@@ -23,4 +26,5 @@ router.register(
 
 urlpatterns = [
     path('v1/', include(router.urls)),
+    path('v1/auth/signup/', EmailView.as_view()),
 ]
