@@ -2,7 +2,17 @@ import datetime
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
 
-from reviews.models import Category, Genre, Title, GenreTitle, Review, Comment
+from djoser.serializers import UserSerializer
+from reviews.models import (
+    Category, Genre, Title, GenreTitle, Review, Comment, User
+)
+
+
+class CustomUserSerializer(UserSerializer):
+
+    class Meta:
+        model = User
+        fields = ('username', 'confirmation_code',)
 
 
 class ConfirmationSerializer(serializers.Serializer):
