@@ -1,9 +1,49 @@
 from django.db import models
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 
-User = get_user_model()
 
 SCORE_LIMIT = [(i, i) for i in range(1, 11)]
+
+
+class User(AbstractUser):
+    USER = 'user'
+    MODER = 'moderator'
+    ADMIN = 'admin'
+    ROLES = [
+        (USER, 'Аутентифицированный пользователь'),
+        (MODER, 'Модератор'),
+        (ADMIN, 'Администратор'),
+    ]
+
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        # validators=[validate_username]
+        )
+    first_name = models.CharField('Имя', max_length=150, blank=True)
+    last_name = models.CharField('Фамилия', max_length=150, blank=True)
+    email = models.EmailField('Почта', unique=True, max_length=254)
+    bio = models.TextField('Биография', blank=True,)
+    role = models.CharField(
+        'Роль',
+        max_length=250,
+        choices=ROLES,
+        default=USER
+    )
+    confirmation_code = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name='Код для идентификации'
+    )
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['username', 'email'], name='unique_together'
+            )
+        ]
 
 
 class Genre(models.Model):
