@@ -7,10 +7,23 @@ from django.contrib.auth.tokens import default_token_generator
 from reviews.models import Category, Genre, Title, Comment, Review, User
 from .serializers import (
     CategorySerializer, GenreSerializer, TitleSerializer,
-    CommentSerializer, ReviewSerializer, ConfirmationSerializer)
+    CommentSerializer, ReviewSerializer, ConfirmationSerializer,
+    CustomUserSerializer
+)
+from djoser.views import UserViewSet
+
+
+class CustomUserViewSet(UserViewSet):
+    serializer_class = CustomUserSerializer
+
+    def post(self, serializer):
+        user = serializer.save()
+        user.set_password(None)
+        user.save()
 
 
 class ConfirmationView(APIView):
+
     def post(self, request):
         serializer = ConfirmationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
