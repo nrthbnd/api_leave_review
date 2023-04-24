@@ -1,25 +1,35 @@
 from rest_framework import viewsets, mixins, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import get_object_or_404
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Title, Comment, Review, User
 from .serializers import (
     CategorySerializer, GenreSerializer, TitleSerializer,
     CommentSerializer, ReviewSerializer, ConfirmationSerializer,
-    CustomUserSerializer
+    TokenSerializer
 )
-from djoser.views import UserViewSet
+# from djoser.views import UserViewSet
 
 
-class CustomUserViewSet(UserViewSet):
-    serializer_class = CustomUserSerializer
-
-    def post(self, serializer):
-        user = serializer.save()
-        user.set_password(None)
-        user.save()
+@api_view(['POST'])
+def token(request):
+    serializer = TokenSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data['username']
+    confirmation_code = serializer.validated_data['confirmation_code']
+    user = get_object_or_404(User, username=username)
+    if user.confirmation_code != confirmation_code:
+        return Response(
+            'Неверный код', status=status.HTTP_400_BAD_REQUEST
+        )
+    refresh = RefreshToken.for_user(user)
+    token_data = {'token': str(refresh.access_token)}
+    return Response(token_data, status=status.HTTP_200_OK)
 
 
 class ConfirmationView(APIView):
@@ -32,6 +42,8 @@ class ConfirmationView(APIView):
             email=serializer.validated_data['email'],
         )[0]
         code = default_token_generator.make_token(user)
+        user.confirmation_code = code
+        user.save()
         send_mail(
             'Код получения токена',
             f'Ваш код: {code}',
