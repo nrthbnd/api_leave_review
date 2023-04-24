@@ -59,6 +59,7 @@ class User(AbstractUser):
 
 
 class Genre(models.Model):
+    """Модель жанров"""
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -71,6 +72,7 @@ class Genre(models.Model):
 
 
 class Category(models.Model):
+    """Модель категорий произведений"""
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -83,6 +85,7 @@ class Category(models.Model):
 
 
 class Title(models.Model):
+    """Модель произведений"""
     name = models.CharField(max_length=256)
     year = models.IntegerField(
         validators=[validate_year],
@@ -136,6 +139,7 @@ class GenreTitle(models.Model):
 
 
 class Review(models.Model):
+    """Модель отзывов на произведения"""
     text = models.TextField(
         verbose_name='Текст отзыва',
         help_text='Текст нового отзывы',
@@ -167,6 +171,7 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
+    """Модель комментариев к отзывам"""
     text = models.TextField(
         verbose_name='Текст комментария',
         help_text='Текст нового комментария',
