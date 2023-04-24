@@ -3,7 +3,7 @@ from rest_framework.routers import SimpleRouter
 
 from api.views import (
     CategoryViewSet, GenreViewSet, TitleViewSet, CommentViewSet, ReviewViewSet,
-    ConfirmationView
+    ConfirmationView, token
 )
 
 app_name = 'api'
@@ -26,7 +26,6 @@ router.register(
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('v1/', include('djoser.urls')),
-    path('v1/', include('djoser.urls.jwt')),
-    path('v1/auth/signup/', ConfirmationView.as_view()),
+    path('v1/auth/signup/', ConfirmationView.as_view(), name='signup'),
+    path('v1/auth/token/', token, name='login'),
 ]
