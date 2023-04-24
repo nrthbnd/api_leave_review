@@ -27,7 +27,6 @@ class TitleAdmin(admin.ModelAdmin):
         'pk',
         'name',
         'year',
-        'rating',
         'description',
         'category',
     )
