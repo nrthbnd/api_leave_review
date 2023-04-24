@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+from .validators import validate_year
 
 SCORE_LIMIT = [(i, i) for i in range(1, 11)]
 
@@ -45,6 +46,17 @@ class User(AbstractUser):
             )
         ]
 
+    @property
+    def is_admin(self):
+        return (self.role == self.ADMIN or self.is_staff)
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODER
+
+    def __str__(self):
+        return self.username
+
 
 class Genre(models.Model):
     name = models.CharField(max_length=256)
@@ -71,16 +83,23 @@ class Category(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=256)
     year = models.IntegerField(
+        validators=[validate_year],
         verbose_name='Год создания',
     )
-    rating = models.IntegerField(default=0)
+    # rating = models.IntegerField(default=0)
     description = models.TextField(
         'Описание',
+        blank=True,
         help_text='Описанdие произведения',
     )
-    genre = models.ManyToManyField(Genre, through='GenreTitle')
+    genre = models.ManyToManyField(
+        Genre,
+        through='GenreTitle',
+        blank=True,
+        related_name='titles'
+    )
     category = models.ForeignKey(
         'Category',
         null=True,
@@ -92,7 +111,7 @@ class Title(models.Model):
 
     class Meta:
         verbose_name = 'Название произведения'
-        verbose_name_plural = 'Название произведении'
+        verbose_name_plural = 'Названия произведений'
         ordering = ['-year']
 
     def __str__(self) -> str:
