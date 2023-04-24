@@ -3,20 +3,38 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 
 from reviews.models import Category, Genre, Review, Title, User
 
 from .permissions import IsAdmin, IsAuthorOrModeratorOrReadOnly, ReadOnly
 from .serializers import (CategorySerializer, CommentSerializer,
                           ConfirmationSerializer, GenreSerializer,
-                          ReviewSerializer, TitleSerializer)
+                          ReviewSerializer, TitleSerializer, TokenSerializer)
 from .viewsets import ListCreateDestroyViewSet
 from .filters import TitleFilter
+
+
+@api_view(['POST'])
+def token(request):
+    serializer = TokenSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data['username']
+    confirmation_code = serializer.validated_data['confirmation_code']
+    user = get_object_or_404(User, username=username)
+    if user.confirmation_code != confirmation_code:
+        return Response(
+            'Неверный код', status=status.HTTP_400_BAD_REQUEST
+        )
+    refresh = RefreshToken.for_user(user)
+    token_data = {'token': str(refresh.access_token)}
+    return Response(token_data, status=status.HTTP_200_OK)
 
 
 class ConfirmationView(APIView):
@@ -29,6 +47,8 @@ class ConfirmationView(APIView):
             email=serializer.validated_data['email'],
         )[0]
         code = default_token_generator.make_token(user)
+        user.confirmation_code = code
+        user.save()
         send_mail(
             'Код получения токена',
             f'Ваш код: {code}',

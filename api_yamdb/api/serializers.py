@@ -1,9 +1,18 @@
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
 
-from reviews.models import (
-    Category, Genre, Title, GenreTitle, Review, Comment)
 from reviews.validators import validate_year
+from reviews.models import (Category, Genre, Title,
+                            GenreTitle, Review, Comment)
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        required=True,
+    )
+    confirmation_code = serializers.CharField(
+        required=True,
+    )
 
 
 class ConfirmationSerializer(serializers.Serializer):
