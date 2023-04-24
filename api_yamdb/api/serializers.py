@@ -1,10 +1,9 @@
-import datetime
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
 
-from reviews.models import (
-    Category, Genre, Title, GenreTitle, Review, Comment
-)
+from reviews.validators import validate_year
+from reviews.models import (Category, Genre, Title,
+                            GenreTitle, Review, Comment)
 
 
 class TokenSerializer(serializers.Serializer):
@@ -21,29 +20,38 @@ class ConfirmationSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 
+class CategorySerializer(serializers.ModelSerializer):
+    """Сериализатор для категорий"""
+    titles = serializers.StringRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = Category
+        fields = ('name', 'slug', 'titles')
+
+
 class GenreSerializer(serializers.ModelSerializer):
+    """Сериализатор для жанров"""
 
     class Meta:
         model = Genre
-        fields = ('id', 'name', 'slug')
+        fields = ('name', 'slug')
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    """Сериализатор для произведений"""
+    category = CategorySerializer()
     genre = GenreSerializer(many=True, required=False)
     description = serializers.StringRelatedField(required=False)
+    year = serializers.IntegerField(validators=[validate_year])
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
-
-    def validate_year(value):
-        current_year = datetime.date.today().year
-        if value > current_year or value < 1800:
-            raise ValidationError(
-                'Год должен быть меньше или равен текущему, но больше 1800.'
-            )
+        fields = ('id', 'rating', 'name', 'year',
+                  'description', 'genre', 'category')
 
     def create(self, validated_data):
+        """Сохранение данных в таблице GenreTitle"""
         genre = validated_data.pop('genre')
         name = Title.objects.create(**validated_data)
         for item in genre:
@@ -52,15 +60,8 @@ class TitleSerializer(serializers.ModelSerializer):
         return name
 
 
-class CategorySerializer(serializers.ModelSerializer):
-    titles = serializers.StringRelatedField(many=True, read_only=True)
-
-    class Meta:
-        model = Category
-        fields = ('id', 'name', 'slug', 'titles')
-
-
 class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор для отзывов"""
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
@@ -71,13 +72,18 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
     def validate_score(value):
+        """Проверка рейтинга, выставляемого пользователем"""
         if value < 1 or value > 10:
             raise ValidationError(
                 'Рейтинг должен быть от 1 до 10.'
             )
+        return value
+
+    # Валидация повторного отзыва на 1 произведение
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор для комментариев"""
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
