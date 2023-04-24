@@ -1,25 +1,22 @@
-from rest_framework import viewsets, mixins, status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.filters import OrderingFilter, SearchFilter
 
-from reviews.models import Category, Genre, Title, Comment, Review, User
-from .serializers import (
-    CategorySerializer, GenreSerializer, TitleSerializer,
-    CommentSerializer, ReviewSerializer, ConfirmationSerializer,
-    CustomUserSerializer
-)
-from djoser.views import UserViewSet
+from reviews.models import Category, Genre, Review, Title, User
 
-
-class CustomUserViewSet(UserViewSet):
-    serializer_class = CustomUserSerializer
-
-    def post(self, serializer):
-        user = serializer.save()
-        user.set_password(None)
-        user.save()
+from .permissions import IsAdmin, IsAuthorOrModeratorOrReadOnly, ReadOnly
+from .serializers import (CategorySerializer, CommentSerializer,
+                          ConfirmationSerializer, GenreSerializer,
+                          ReviewSerializer, TitleSerializer)
+from .viewsets import ListCreateDestroyViewSet
+from .filters import TitleFilter
 
 
 class ConfirmationView(APIView):
@@ -46,32 +43,73 @@ class ConfirmationView(APIView):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет для модели Title"""
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    pagination_class = None
+    permission_classes = (IsAdmin, ReadOnly,)
+    filter_backends = (DjangoFilterBackend, OrderingFilter,)
+    filterset_class = TitleFilter
+    ordering_fields = ('name',)
 
 
-class ListCreateDestroy(mixins.ListModelMixin, mixins.CreateModelMixin,
-                        mixins.DestroyModelMixin, viewsets.GenericViewSet):
-    pass
+class CategoryGenreViewSet(ListCreateDestroyViewSet):
+    """Вьюсет для моделей Category и Genre"""
+    pagination_class = None
+    filter_backends = (SearchFilter,)
+    search_fileds = ('name',)
+    permission_classes = (IsAdmin, ReadOnly)
 
 
-class GenreViewSet(ListCreateDestroy):
+class GenreViewSet(CategoryGenreViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    search_fileds = ('name')
 
 
-class CategoryViewSet(ListCreateDestroy):
+class CategoryViewSet(CategoryGenreViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    search_fileds = ('name')
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
+    """Вьюсет модели Comment"""
     serializer_class = CommentSerializer
+    pagination_class = None
+    permission_classes = (IsAuthorOrModeratorOrReadOnly,
+                          IsAuthenticatedOrReadOnly,)
+
+    @property
+    def review(self):
+        """Возвращает из БД объект review"""
+        return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+
+    def get_queryset(self):
+        """Возвращает все коментарии для объекта review"""
+        return self.review.comments.all()
+
+    def perform_create(self, serializer):
+        """Сохраняет комментарий с автором и отзывом,
+        к которому он оставляется"""
+        serializer.save(author=self.request.user, review=self.review)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all()
+    """Вьюсет для модели Review"""
     serializer_class = ReviewSerializer
+    pagination_class = None
+    permission_classes = (IsAuthorOrModeratorOrReadOnly,
+                          IsAuthenticatedOrReadOnly,)
+
+    @property
+    def title(self):
+        """Возвращает из БД объект title"""
+        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+
+    def get_queryset(self):
+        """Возвращает все отзывы для объекта title"""
+        return self.title.reviews.all()
+
+    def perform_create(self, serializer):
+        """Сохраняет отзыв с автором и заголовком,
+        полученными из запроса и объектом title"""
+        serializer.save(author=self.request.user, title=self.title)
