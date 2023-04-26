@@ -5,15 +5,16 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import (AllowAny, IsAuthenticatedOrReadOnly)
+# IsAuthenticated,
 
 from reviews.models import Category, Genre, Review, Title, User
 
-from .permissions import IsAdmin, IsAuthorOrModeratorOrReadOnly, ReadOnly
+from .permissions import (IsAdmin, IsAuthorOrModeratorOrReadOnly,
+                          IsAdminOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           ConfirmationSerializer, GenreSerializer,
                           ReviewSerializer, TitleSerializer, TokenSerializer)
@@ -21,7 +22,19 @@ from .viewsets import ListCreateDestroyViewSet
 from .filters import TitleFilter
 
 
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    # filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+    permission_classes = (IsAdmin,)
+    # serializer_class = UserSerializer
+    lookup_field = 'username'
+
+# def me
+
+
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def token(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -67,7 +80,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     pagination_class = None
-    permission_classes = (IsAdmin, ReadOnly,)
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = (DjangoFilterBackend, OrderingFilter,)
     filterset_class = TitleFilter
     ordering_fields = ('name',)
@@ -78,7 +91,7 @@ class CategoryGenreViewSet(ListCreateDestroyViewSet):
     pagination_class = None
     filter_backends = (SearchFilter,)
     search_fileds = ('name',)
-    permission_classes = (IsAdmin,)
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class GenreViewSet(CategoryGenreViewSet):
