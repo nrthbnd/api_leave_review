@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-from .validators import validate_year
+from .validators import validate_year, validate_username
 
 SCORE_LIMIT = [(i, i) for i in range(1, 11)]
 
@@ -17,13 +17,22 @@ class User(AbstractUser):
     ]
 
     username = models.CharField(
+        'Имя пользователя',
+        validators=(validate_username,),
         max_length=150,
         unique=True,
-        # validators=[validate_username]
-        )
+        blank=False,
+        null=False
+    )
+    email = models.EmailField(
+        'Адрес электронной почты',
+        max_length=254,
+        unique=True,
+        blank=False,
+        null=False
+    )
     first_name = models.CharField('Имя', max_length=150, blank=True)
     last_name = models.CharField('Фамилия', max_length=150, blank=True)
-    email = models.EmailField('Почта', unique=True, max_length=254)
     bio = models.TextField('Биография', blank=True,)
     role = models.CharField(
         'Роль',
