@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 
 from reviews.validators import validate_year
 from reviews.models import (Category, Genre, Title,
-                            GenreTitle, Review, Comment)
+                            GenreTitle, Review, Comment, User)
 
 
 class TokenSerializer(serializers.Serializer):
@@ -13,6 +13,25 @@ class TokenSerializer(serializers.Serializer):
     confirmation_code = serializers.CharField(
         required=True,
     )
+
+
+class UsersSerializer(serializers.ModelSerializer):
+    """Сериализатор для пользователя с ролью 'moderator', 'admin'."""
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
+        )
+
+
+class NotAdminSerializer(serializers.ModelSerializer):
+    """Сериализатор для пользователя с ролью 'user'."""
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
+        )
+        read_only_fields = ('role',)
 
 
 class ConfirmationSerializer(serializers.Serializer):

@@ -2,6 +2,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import action
 from rest_framework import status, viewsets
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
@@ -13,10 +14,14 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
 
 from reviews.models import Category, Genre, Review, Title, User
 
-from .permissions import IsAdmin, IsAuthorOrModeratorOrReadOnly, ReadOnly
+from .permissions import (
+    IsAdmin, IsAuthorOrModeratorOrReadOnly,
+    ReadOnly, SelfEditUserOnlyPermission
+)
 from .serializers import (CategorySerializer, CommentSerializer,
                           ConfirmationSerializer, GenreSerializer,
-                          ReviewSerializer, TitleSerializer, TokenSerializer)
+                          ReviewSerializer, TitleSerializer, TokenSerializer,
+                          UsersSerializer, NotAdminSerializer)
 from .viewsets import ListCreateDestroyViewSet
 from .filters import TitleFilter
 
@@ -60,6 +65,39 @@ class ConfirmationView(APIView):
             {"email": user.email, "username": user.username},
             status=status.HTTP_200_OK
         )
+
+
+class UsersViewSet(viewsets.ModelViewSet):
+    """Получение и редактирование информации о пользователях,
+    удаление пользователя.
+    """
+    queryset = User.objects.all()
+    serializer_class = UsersSerializer
+    lookup_field = 'username'
+    filter_backends = (SearchFilter,)
+    search_fields = ('username',)
+    permission_classes = (IsAuthorOrModeratorOrReadOnly,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
+
+    @action(
+        methods=['get', 'patch'], detail=False,
+        url_path='me', permission_classes=(SelfEditUserOnlyPermission,)
+    )
+    def me_user(self, request):
+        if request.method == 'GET':
+            user = get_object_or_404(
+                User, username=request.user
+            )
+            serializer = self.get_serializer(user)
+            return Response(serializer.data)
+
+        user = get_object_or_404(
+            User, username=request.user
+        )
+        serializer = NotAdminSerializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, tatus=status.HTTP_200_OK)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
