@@ -22,11 +22,10 @@ class ConfirmationSerializer(serializers.Serializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для категорий"""
-    titles = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Category
-        fields = ('name', 'slug', 'titles')
+        fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):

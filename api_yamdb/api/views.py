@@ -78,7 +78,7 @@ class CategoryGenreViewSet(ListCreateDestroyViewSet):
     pagination_class = None
     filter_backends = (SearchFilter,)
     search_fileds = ('name',)
-    permission_classes = (IsAdmin, ReadOnly)
+    permission_classes = (IsAdmin,)
 
 
 class GenreViewSet(CategoryGenreViewSet):
