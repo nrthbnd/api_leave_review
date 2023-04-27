@@ -17,8 +17,9 @@ from .permissions import (IsAdmin, IsAuthorOrModeratorOrReadOnly,
                           IsAdminOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
-                          TitleSerializer, UserSerializer,
-                          ConfirmationSerializer, TokenSerializer)
+                          TitleReadSerializer, TitleWriteSerializer,
+                          UserSerializer, ConfirmationSerializer,
+                          TokenSerializer)
 from .viewsets import ListCreateDestroyViewSet
 from .filters import TitleFilter
 
@@ -92,14 +93,19 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    """Вьюсет для модели Title"""
+    """Получает список всех произведений"""
     queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
-    serializer_class = TitleSerializer
+    serializer_class = TitleReadSerializer
     pagination_class = None
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = (DjangoFilterBackend, OrderingFilter,)
     filterset_class = TitleFilter
     ordering_fields = ('name',)
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return TitleReadSerializer
+        return TitleWriteSerializer
 
 
 class CategoryGenreViewSet(ListCreateDestroyViewSet):
