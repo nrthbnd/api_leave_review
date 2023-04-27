@@ -11,6 +11,8 @@ class TokenSerializer(serializers.Serializer):
     """Сериализатор для получения токена"""
     username = serializers.CharField(
         required=True,
+        max_length=150,
+        validators=[validate_username],
     )
     confirmation_code = serializers.CharField(
         required=True,
@@ -19,8 +21,15 @@ class TokenSerializer(serializers.Serializer):
 
 class ConfirmationSerializer(serializers.Serializer):
     """Сериализатор для получения confirmation_code"""
-    username = serializers.CharField()
-    email = serializers.EmailField()
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=[validate_username],
+    )
+    email = serializers.EmailField(
+        required=True,
+        max_length=254
+    )
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -71,7 +80,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'rating', 'name', 'year',
+        fields = ('id', 'name', 'year', 'rating',
                   'description', 'genre', 'category')
         read_only_fields = ('__all__',)
 
@@ -98,6 +107,10 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор для отзывов"""
+    title = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='name'
+    )
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
@@ -120,6 +133,10 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор для комментариев"""
+    review = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='text'
+    )
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
