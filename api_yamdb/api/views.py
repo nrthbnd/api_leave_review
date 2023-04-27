@@ -3,6 +3,7 @@ from django.db.models import Avg
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import status, viewsets
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
@@ -77,6 +78,7 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdmin,)
     serializer_class = UserSerializer
     lookup_field = 'username'
+    pagination_class = PageNumberPagination
 
     @action(
         detail=False,
@@ -96,7 +98,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Получает список всех произведений"""
     queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     serializer_class = TitleReadSerializer
-    pagination_class = None
+    pagination_class = PageNumberPagination
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = (DjangoFilterBackend, OrderingFilter,)
     filterset_class = TitleFilter
@@ -110,7 +112,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class CategoryGenreViewSet(ListCreateDestroyViewSet):
     """Вьюсет для моделей Category и Genre"""
-    pagination_class = None
+    pagination_class = PageNumberPagination
     filter_backends = (SearchFilter,)
     search_fileds = ('name',)
     permission_classes = [IsAdminOrReadOnly]
@@ -130,7 +132,7 @@ class CategoryViewSet(CategoryGenreViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет модели Comment"""
     serializer_class = CommentSerializer
-    pagination_class = None
+    pagination_class = PageNumberPagination
     permission_classes = (IsAuthorOrModeratorOrReadOnly,
                           IsAuthenticatedOrReadOnly,)
 
@@ -152,7 +154,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Review"""
     serializer_class = ReviewSerializer
-    pagination_class = None
+    pagination_class = PageNumberPagination
     permission_classes = (IsAuthorOrModeratorOrReadOnly,
                           IsAuthenticatedOrReadOnly,)
 
