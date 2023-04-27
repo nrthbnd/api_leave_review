@@ -1,9 +1,10 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 from django.core.exceptions import ValidationError
 
-from reviews.validators import validate_year
+from reviews.validators import validate_username
 from reviews.models import (Category, Genre, Title,
-                            GenreTitle, Review, Comment)
+                            Review, Comment, User)
 
 
 class TokenSerializer(serializers.Serializer):
@@ -22,6 +23,30 @@ class ConfirmationSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания пользователя"""
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=[
+            validate_username,
+            UniqueValidator(queryset=User.objects.all())
+        ]
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
+        )
+        validators = [
+            UniqueTogetherValidator(
+                queryset=User.objects.all(),
+                fields=['username', 'email']
+            ),
+        ]
+
+
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для категорий"""
 
@@ -38,27 +63,37 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ('name', 'slug')
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    """Сериализатор для произведений"""
+class TitleReadSerializer(serializers.ModelSerializer):
+    """Сериализатор для SAFE_METHODS к произведениям"""
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    description = serializers.StringRelatedField(required=False)
-    year = serializers.IntegerField(validators=[validate_year])
+    rating = serializers.IntegerField()
+
+    class Meta:
+        model = Title
+        fields = ('id', 'rating', 'name', 'year',
+                  'description', 'genre', 'category')
+        read_only_fields = ('__all__',)
+
+
+class TitleWriteSerializer(serializers.ModelSerializer):
+    """Сериализатор для добавления и частичного изменения
+     информации о произведении"""
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug'
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True
+    )
     rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
         fields = ('id', 'rating', 'name', 'year',
                   'description', 'genre', 'category')
-
-    def create(self, validated_data):
-        """Сохранение данных в таблице GenreTitle"""
-        genre = validated_data.pop('genre')
-        name = Title.objects.create(**validated_data)
-        for item in genre:
-            current_genre, status = Genre.objects.get_or_create(**item)
-            GenreTitle.objects.create(item=current_genre, name=name)
-        return name
 
 
 class ReviewSerializer(serializers.ModelSerializer):
