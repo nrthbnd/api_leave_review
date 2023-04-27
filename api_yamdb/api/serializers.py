@@ -7,6 +7,7 @@ from reviews.models import (Category, Genre, Title,
 
 
 class TokenSerializer(serializers.Serializer):
+    """Сериализатор для получения токена"""
     username = serializers.CharField(
         required=True,
     )
@@ -16,6 +17,7 @@ class TokenSerializer(serializers.Serializer):
 
 
 class ConfirmationSerializer(serializers.Serializer):
+    """Сериализатор для получения confirmation_code"""
     username = serializers.CharField()
     email = serializers.EmailField()
 
@@ -39,7 +41,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений"""
     category = CategorySerializer()
-    genre = GenreSerializer(many=True, required=False)
+    genre = GenreSerializer(many=True)
     description = serializers.StringRelatedField(required=False)
     year = serializers.IntegerField(validators=[validate_year])
     rating = serializers.IntegerField(read_only=True)
