@@ -138,19 +138,16 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,
                           IsAuthenticatedOrReadOnly,)
 
-    @property
-    def review(self):
-        """Возвращает из БД объект review"""
-        return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
-
     def get_queryset(self):
-        """Возвращает все коментарии для объекта review"""
-        return self.review.comments.all()
+        """Возвращает из БД объект review и все комментарии к нему"""
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        return review.comments.all()
 
     def perform_create(self, serializer):
-        """Сохраняет комментарий с автором и отзывом,
-        к которому он оставляется"""
-        serializer.save(author=self.request.user, review=self.review)
+        """Сохраняет комементарий с автором и review,
+        полученными из запроса и объектом review"""
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        serializer.save(author=self.request.user, review=review)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
