@@ -127,6 +127,32 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         fields = ('id', 'rating', 'name', 'year',
                   'description', 'genre', 'category')
 
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор для отзывов"""
+    title = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='name',
+    )
+    author = serializers.SlugRelatedField(
+        default=serializers.CurrentUserDefault(),
+        read_only=True,
+        slug_field='username',
+    )
+
+    class Meta:
+        fields = '__all__'
+        # fields = ('id', 'text', 'author', 'score', 'pub_date')
+        model = Review
+
+    def validate_score(self, value):
+        """Проверка рейтинга, выставляемого пользователем"""
+        if value < 1 or value > 10:
+            raise ValidationError(
+                'Рейтинг должен быть от 1 до 10.'
+            )
+        return value
+
     def validate_review(self, data):
         """Проверка на однократное создание отзыва"""
         request = self.context['request']
@@ -137,7 +163,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
             if Review.objects.filter(title=title, author=author).exists():
                 raise ValidationError(
                     'На одно произведение нельзя оставить отзыв дважды.')
-            return data
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):

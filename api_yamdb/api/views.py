@@ -115,10 +115,10 @@ class TitleViewSet(viewsets.ModelViewSet):
 class CategoryGenreViewSet(ListCreateDestroyViewSet):
     """Вьюсет для моделей Category и Genre"""
     pagination_class = PageNumberPagination
-    filter_backends = (SearchFilter,)
-    search_fileds = ('name',)
     permission_classes = [IsAdminOrReadOnly]
     lookup_field = 'slug'
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
 
 
 class GenreViewSet(CategoryGenreViewSet):
@@ -138,23 +138,15 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,
                           IsAuthenticatedOrReadOnly,)
 
-    @property
-    def review(self):
-        """Возвращает из БД объект review"""
-        return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
-
     def get_queryset(self):
-        review = get_object_or_404(
-            Review,
-            id=self.kwargs.get('review_id'),
-            title_id=self.kwargs.get('titles_id'))
+        """Возвращает из БД объект review и все комментарии к нему"""
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
         return review.comments.all()
 
     def perform_create(self, serializer):
-        review = get_object_or_404(
-            Review,
-            id=self.kwargs.get('review_id'),
-            title_id=self.kwargs.get('titles_id'))
+        """Сохраняет комементарий с автором и review,
+        полученными из запроса и объектом review"""
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
         serializer.save(author=self.request.user, review=review)
 
 

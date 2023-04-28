@@ -7,6 +7,7 @@ SCORE_LIMIT = [(i, i) for i in range(1, 11)]
 
 
 class User(AbstractUser):
+    """Модель пользователя"""
     USER = 'user'
     MODER = 'moderator'
     ADMIN = 'admin'
@@ -60,8 +61,9 @@ class User(AbstractUser):
 
 class Genre(models.Model):
     """Модель жанров"""
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+    name = models.CharField(max_length=256, verbose_name='Жанр')
+    slug = models.SlugField(max_length=50, verbose_name='Адрес')
+# slug = models.SlugField(unique=True)
 
     def __str__(self) -> str:
         return self.name
@@ -73,8 +75,8 @@ class Genre(models.Model):
 
 class Category(models.Model):
     """Модель категорий произведений"""
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+    name = models.CharField(max_length=256, verbose_name='Категория')
+    slug = models.SlugField(max_length=50, unique=True, verbose_name='Адрес')
 
     def __str__(self) -> str:
         return self.name
@@ -100,7 +102,7 @@ class Title(models.Model):
         Genre,
         through='GenreTitle',
         blank=True,
-        related_name='titles'
+        related_name='titles',
     )
     category = models.ForeignKey(
         'Category',
