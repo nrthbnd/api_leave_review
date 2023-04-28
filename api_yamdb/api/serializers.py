@@ -135,6 +135,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         slug_field='name',
     )
     author = serializers.SlugRelatedField(
+        default=serializers.CurrentUserDefault(),
         read_only=True,
         slug_field='username',
     )
@@ -162,7 +163,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             if Review.objects.filter(title=title, author=author).exists():
                 raise ValidationError(
                     'На одно произведение нельзя оставить отзыв дважды.')
-            return data
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):

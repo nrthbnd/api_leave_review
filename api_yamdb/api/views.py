@@ -115,10 +115,10 @@ class TitleViewSet(viewsets.ModelViewSet):
 class CategoryGenreViewSet(ListCreateDestroyViewSet):
     """Вьюсет для моделей Category и Genre"""
     pagination_class = PageNumberPagination
-    filter_backends = (SearchFilter,)
-    search_fileds = ('name',)
     permission_classes = [IsAdminOrReadOnly]
     lookup_field = 'slug'
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
 
 
 class GenreViewSet(CategoryGenreViewSet):
