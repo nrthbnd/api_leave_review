@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-from .validators import validate_year
+from .validators import validate_year, validate_username
 
 SCORE_LIMIT = [(i, i) for i in range(1, 11)]
 
@@ -19,7 +19,7 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=150,
         unique=True,
-        # validators=[validate_username]
+        validators=[validate_username]
         )
     first_name = models.CharField('Имя', max_length=150, blank=True)
     last_name = models.CharField('Фамилия', max_length=150, blank=True)
@@ -91,7 +91,6 @@ class Title(models.Model):
         validators=[validate_year],
         verbose_name='Год создания',
     )
-    # rating = models.IntegerField(default=0)
     description = models.TextField(
         'Описание',
         blank=True,
@@ -176,12 +175,12 @@ class Comment(models.Model):
         verbose_name='Текст комментария',
         help_text='Текст нового комментария',
     )
-    title = models.ForeignKey(
-        Title,
+    review = models.ForeignKey(
+        Review,
         on_delete=models.CASCADE,
         related_name='comment',
-        verbose_name='Название произведения',
-        help_text='Название произведения',
+        verbose_name='Отзыв',
+        help_text='Отзывы',
     )
     author = models.ForeignKey(
         User,
