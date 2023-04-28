@@ -14,7 +14,7 @@ from rest_framework.permissions import (AllowAny, IsAuthenticatedOrReadOnly,
                                         IsAuthenticated)
 
 from reviews.models import Category, Genre, Review, Title, User
-from .permissions import (IsAdmin, IsAuthorOrModeratorOrReadOnly,
+from .permissions import (IsAdmin, IsAuthorOrModeratorOrAdminOrReadOnly,
                           IsAdminOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
@@ -70,6 +70,7 @@ def token(request):
     return Response(token_data, status=status.HTTP_200_OK)
 
 
+# @api_view(['POST, GET, PATCH, DELETE'])
 class UserViewSet(viewsets.ModelViewSet):
     """Получение информации о пользователях и ее редактирование"""
     queryset = User.objects.all()
@@ -105,6 +106,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     ordering_fields = ('name',)
 
     def get_serializer_class(self):
+        """Выбор сериализатора в зависимости от метода"""
         if self.action in ['list', 'retrieve']:
             return TitleReadSerializer
         return TitleWriteSerializer
@@ -130,10 +132,10 @@ class CategoryViewSet(CategoryGenreViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """Вьюсет модели Comment"""
+    """Вьюсет для комментариев"""
     serializer_class = CommentSerializer
     pagination_class = PageNumberPagination
-    permission_classes = (IsAuthorOrModeratorOrReadOnly,
+    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,
                           IsAuthenticatedOrReadOnly,)
 
     @property
@@ -152,22 +154,20 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    """Вьюсет для модели Review"""
+    """Вьюсет для отзывов"""
     serializer_class = ReviewSerializer
     pagination_class = PageNumberPagination
-    permission_classes = (IsAuthorOrModeratorOrReadOnly,
+    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,
                           IsAuthenticatedOrReadOnly,)
 
-    @property
-    def title(self):
-        """Возвращает из БД объект title"""
-        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-
     def get_queryset(self):
-        """Возвращает все отзывы для объекта title"""
-        return self.title.reviews.all()
+        """Возвращает из БД объект title и все отзывы для него"""
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         """Сохраняет отзыв с автором и заголовком,
         полученными из запроса и объектом title"""
-        serializer.save(author=self.request.user, title=self.title)
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(Title, id=title_id)
+        serializer.save(author=self.request.user, title=title)
