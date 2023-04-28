@@ -65,6 +65,7 @@ class CategorySerializer(serializers.ModelSerializer):
         max_length=50,
         validators=[
             RegexValidator(regex=r'^[-a-zA-Z0-9_]+$'),
+            UniqueValidator(queryset=Category.objects.all())
         ],
     )
 
@@ -86,6 +87,12 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
         fields = ('name', 'slug')
+
+    def validate_slug(self, slug):
+        """Валидация поля slug группы"""
+        if Genre.objects.filter(slug=slug).exists():
+            raise ValidationError('Такой slug уже существует.')
+        return slug
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
@@ -137,7 +144,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         # fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
 
-    def validate_score(value):
+    def validate_score(self, value):
         """Проверка рейтинга, выставляемого пользователем"""
         if value < 1 or value > 10:
             raise ValidationError(
