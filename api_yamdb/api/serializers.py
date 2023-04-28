@@ -153,9 +153,10 @@ class ReviewSerializer(serializers.ModelSerializer):
             )
         return value
 
-    def validate_review(self, data):
+    def validate(self, data):
         """Проверка на однократное создание отзыва"""
         request = self.context['request']
+        # print(request)
         author = request.user
         title_id = self.context['view'].kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)
