@@ -19,7 +19,6 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=150,
         unique=True,
-        # validators=[validate_username]
         )
     first_name = models.CharField('Имя', max_length=150, blank=True)
     last_name = models.CharField('Фамилия', max_length=150, blank=True)
@@ -91,11 +90,14 @@ class Title(models.Model):
         validators=[validate_year],
         verbose_name='Год создания',
     )
-    # rating = models.IntegerField(default=0)
+    rating = models.IntegerField(
+        default=None,
+        choices=SCORE_LIMIT
+    )
     description = models.TextField(
         'Описание',
         blank=True,
-        help_text='Описанdие произведения',
+        help_text='Описаниие произведения',
     )
     genre = models.ManyToManyField(
         Genre,
@@ -154,7 +156,7 @@ class Review(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='author',
+        related_name='reviews',
         verbose_name='Автор',
         help_text='Что то про автора',
     )
@@ -176,17 +178,17 @@ class Comment(models.Model):
         verbose_name='Текст комментария',
         help_text='Текст нового комментария',
     )
-    title = models.ForeignKey(
-        Title,
+    review = models.ForeignKey(
+        Review,
         on_delete=models.CASCADE,
-        related_name='comment',
-        verbose_name='Название произведения',
-        help_text='Название произведения',
+        related_name='comments',
+        verbose_name='Отзыв на произведение',
+        help_text='Отзыв на произведение',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='authors',
+        related_name='comments',
         verbose_name='Автор',
         help_text='Что то про автора',
     )
