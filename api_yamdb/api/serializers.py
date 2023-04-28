@@ -59,35 +59,45 @@ class TitleSerializer(serializers.ModelSerializer):
         return name
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-    """Сериализатор для отзывов"""
-    author = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='username'
-    )
-
-    class Meta:
-        fields = ('id', 'text', 'author', 'score', 'pub_date')
-        model = Review
-
-    def validate_score(value):
-        """Проверка рейтинга, выставляемого пользователем"""
-        if value < 1 or value > 10:
-            raise ValidationError(
-                'Рейтинг должен быть от 1 до 10.'
-            )
-        return value
-
-    # Валидация повторного отзыва на 1 произведение
-
-
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор для комментариев"""
+    review = serializers.SlugRelatedField(
+        slug_field='text',
+        read_only=True
+    )
     author = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='username'
+        slug_field='username',
+        read_only=True
     )
 
     class Meta:
-        fields = ('id', 'text', 'author', 'pub_date')
+        fields = '__all__'
         model = Comment
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор для отзывов"""
+    title = serializers.SlugRelatedField(
+        slug_field='name',
+        read_only=True
+    )
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
+
+    class Meta:
+        fields = ('__all__')
+        model = Review
+
+    def validate(self, data):
+        title = self.context.get('view').kwargs.get('title_id')
+        author = self.context.get('request').user
+        if (
+            self.context.get('request').method == 'POST'
+            and Review.objects.filter(author=author, title=title).exists()
+        ):
+            raise serializers.ValidationError(
+                'Вы уже оставляли отзыв на это произведение!'
+            )
+        return data
