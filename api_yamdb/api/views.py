@@ -13,7 +13,8 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
 
 from reviews.models import Category, Genre, Review, Title, User
 
-from .permissions import IsAdmin, IsAuthorOrModeratorOrReadOnly, ReadOnly
+from .permissions import (IsAdmin, IsAuthorOrModeratorOrReadOnly,
+                          IsAdminOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           ConfirmationSerializer, GenreSerializer,
                           ReviewSerializer, TitleSerializer, TokenSerializer)
@@ -67,7 +68,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     pagination_class = None
-    permission_classes = (IsAdmin, ReadOnly,)
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = (DjangoFilterBackend, OrderingFilter,)
     filterset_class = TitleFilter
     ordering_fields = ('name',)
@@ -78,7 +79,7 @@ class CategoryGenreViewSet(ListCreateDestroyViewSet):
     pagination_class = None
     filter_backends = (SearchFilter,)
     search_fileds = ('name',)
-    permission_classes = (IsAdmin,)
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class GenreViewSet(CategoryGenreViewSet):
@@ -95,41 +96,34 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет модели Comment"""
     serializer_class = CommentSerializer
     pagination_class = None
-    permission_classes = (IsAuthorOrModeratorOrReadOnly,
-                          IsAuthenticatedOrReadOnly,)
-
-    @property
-    def review(self):
-        """Возвращает из БД объект review"""
-        return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
 
     def get_queryset(self):
-        """Возвращает все коментарии для объекта review"""
-        return self.review.comments.all()
+        review = get_object_or_404(
+            Review,
+            id=self.kwargs.get('review_id'),
+            title_id=self.kwargs.get('titles_id'))
+        return review.comments.all()
 
     def perform_create(self, serializer):
-        """Сохраняет комментарий с автором и отзывом,
-        к которому он оставляется"""
-        serializer.save(author=self.request.user, review=self.review)
+        review = get_object_or_404(
+            Review,
+            id=self.kwargs.get('review_id'),
+            title_id=self.kwargs.get('titles_id'))
+        serializer.save(author=self.request.user, review=review)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Review"""
     serializer_class = ReviewSerializer
-    pagination_class = None
-    permission_classes = (IsAuthorOrModeratorOrReadOnly,
-                          IsAuthenticatedOrReadOnly,)
-
-    @property
-    def title(self):
-        """Возвращает из БД объект title"""
-        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+    # queryset = Review.objects.all()
 
     def get_queryset(self):
-        """Возвращает все отзывы для объекта title"""
-        return self.title.reviews.all()
+        title_id = self.kwargs.get('titles_id')
+        print(title_id)
+        title = get_object_or_404(Title, pk=title_id)
+        return title.reviews.all()
 
     def perform_create(self, serializer):
-        """Сохраняет отзыв с автором и заголовком,
-        полученными из запроса и объектом title"""
-        serializer.save(author=self.request.user, title=self.title)
+        title_id = self.kwargs.get('titles_id')
+        title = get_object_or_404(Title, pk=title_id)
+        serializer.save(author=self.request.user, title=title)
