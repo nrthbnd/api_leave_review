@@ -27,6 +27,7 @@ class TitleAdmin(admin.ModelAdmin):
         'pk',
         'name',
         'year',
+        'rating',
         'description',
         'category',
     )
@@ -51,7 +52,7 @@ class CommentAdmin(admin.ModelAdmin):
     list_display = (
         'pk',
         'text',
-        'title',
+        'review',
         'author',
         'pub_date',
     )
