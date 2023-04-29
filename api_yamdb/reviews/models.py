@@ -88,7 +88,7 @@ class Category(models.Model):
 
 class Title(models.Model):
     """Модель произведений"""
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256, unique=True)
     year = models.IntegerField(
         validators=[validate_year],
         verbose_name='Год создания',
