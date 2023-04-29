@@ -140,13 +140,23 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Возвращает из БД объект review и все комментарии к нему"""
-        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
-        return review.comments.all()
+        review = get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title=self.kwargs.get('title_id'),
+            # comment=self.kwargs.get('comment_id')
+            )
+        print(review)
+        return review.comment.all()
 
     def perform_create(self, serializer):
         """Сохраняет комементарий с автором и review,
         полученными из запроса и объектом review"""
-        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        review = get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title=self.kwargs.get('title_id')
+            )
         serializer.save(author=self.request.user, review=review)
 
 
@@ -160,6 +170,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Возвращает из БД объект title и все отзывы для него"""
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        # print(title.reviews)
         return title.reviews.all()
 
     def perform_create(self, serializer):
