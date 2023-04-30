@@ -21,7 +21,7 @@ class TokenSerializer(serializers.Serializer):
     )
 
 
-class ConfirmationSerializer(serializers.Serializer):
+class SignupSerializer(serializers.Serializer):
     """Сериализатор для получения confirmation_code"""
     username = serializers.CharField(
         required=True,
@@ -32,6 +32,15 @@ class ConfirmationSerializer(serializers.Serializer):
         required=True,
         max_length=254
     )
+
+    def validate(self, data):
+        user_username = User.objects.filter(username=data['username'])
+        user_email = User.objects.filter(email=data['email'])
+        if user_email and not user_username:
+            raise ValidationError('Error username or emil')
+        if user_username and not user_email:
+            raise ValidationError('Error username or emil')
+        return data
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -153,9 +162,10 @@ class ReviewSerializer(serializers.ModelSerializer):
             )
         return value
 
-    def validate_review(self, data):
+    def validate(self, data):
         """Проверка на однократное создание отзыва"""
         request = self.context['request']
+        # print(request)
         author = request.user
         title_id = self.context['view'].kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)

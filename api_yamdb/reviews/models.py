@@ -88,7 +88,7 @@ class Category(models.Model):
 
 class Title(models.Model):
     """Модель произведений"""
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256, unique=True)
     year = models.IntegerField(
         validators=[validate_year],
         verbose_name='Год создания',
@@ -169,6 +169,12 @@ class Review(models.Model):
         ordering = ('-pub_date',)
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_title_author'
+            )
+        ]
 
 
 class Comment(models.Model):
