@@ -79,7 +79,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     lookup_field = 'username'
     pagination_class = PageNumberPagination
-    # http_method_names = ['get', 'post', 'head', 'patch', 'delete']
+    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
 
     @action(
         detail=False,
