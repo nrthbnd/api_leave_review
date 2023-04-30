@@ -8,7 +8,6 @@ from rest_framework import status, viewsets
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, action
-from rest_framework.views import APIView
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import (AllowAny, IsAuthenticatedOrReadOnly,
                                         IsAuthenticated)
@@ -25,31 +24,30 @@ from .viewsets import ListCreateDestroyViewSet
 from .filters import TitleFilter
 
 
-class ConfirmationView(APIView):
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_code(request):
     """Отправка confirmation_code на email, введенный при регистрации"""
-    permission_classes = [AllowAny, ]
-
-    def post(self, request):
-        serializer = ConfirmationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = User.objects.get_or_create(
-            username=serializer.validated_data['username'],
-            email=serializer.validated_data['email'],
-        )[0]
-        code = default_token_generator.make_token(user)
-        user.confirmation_code = code
-        user.save()
-        send_mail(
-            'Код получения токена',
-            f'Ваш код: {code}',
-            'user@ya.ru',
-            [user.email],
-            fail_silently=False,
-        )
-        return Response(
-            {"email": user.email, "username": user.username},
-            status=status.HTTP_200_OK
-        )
+    serializer = ConfirmationSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user = User.objects.get_or_create(
+        username=serializer.validated_data['username'],
+        email=serializer.validated_data['email'],
+    )[0]
+    code = default_token_generator.make_token(user)
+    user.confirmation_code = code
+    user.save()
+    send_mail(
+        'Код получения токена',
+        f'Ваш код: {code}',
+        'user@ya.ru',
+        [user.email],
+        fail_silently=False,
+    )
+    return Response(
+        {"email": user.email, "username": user.username},
+        status=status.HTTP_200_OK
+    )
 
 
 @api_view(['POST'])
@@ -71,6 +69,7 @@ def token(request):
 
 
 # @api_view(['POST, GET, PATCH, DELETE'])
+# @action(methods=['get', 'post', 'patch', 'delete'])
 class UserViewSet(viewsets.ModelViewSet):
     """Получение информации о пользователях и ее редактирование"""
     queryset = User.objects.all()

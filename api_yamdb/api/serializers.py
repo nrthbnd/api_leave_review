@@ -33,6 +33,19 @@ class ConfirmationSerializer(serializers.Serializer):
         max_length=254
     )
 
+    def validate(self, data):
+        user_username = User.objects.filter(username=data['username'])
+        user_email = User.objects.filter(email=data['email'])
+        user_username_email = User.objects.filter(
+            username=data['username'], email=data['email']
+            )
+        print(user_username_email.all())
+        if user_email and not user_username:
+            raise ValidationError('Error username or emil')
+        if user_username_email:
+            raise ValidationError('Error username or emil')
+        return data
+
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для создания пользователя"""
