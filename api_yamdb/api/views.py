@@ -145,7 +145,7 @@ class CommentViewSet(viewsets.ModelViewSet):
             pk=self.kwargs.get('review_id'),
             title=self.kwargs.get('title_id'),
             # comment=self.kwargs.get('comment_id')
-            )
+        )
         print(review)
         return review.comment.all()
 
@@ -156,7 +156,7 @@ class CommentViewSet(viewsets.ModelViewSet):
             Review,
             pk=self.kwargs.get('review_id'),
             title=self.kwargs.get('title_id')
-            )
+        )
         serializer.save(author=self.request.user, review=review)
 
 
