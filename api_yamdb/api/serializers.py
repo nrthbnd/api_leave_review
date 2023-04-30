@@ -21,7 +21,7 @@ class TokenSerializer(serializers.Serializer):
     )
 
 
-class ConfirmationSerializer(serializers.Serializer):
+class SignupSerializer(serializers.Serializer):
     """Сериализатор для получения confirmation_code"""
     username = serializers.CharField(
         required=True,
@@ -36,13 +36,9 @@ class ConfirmationSerializer(serializers.Serializer):
     def validate(self, data):
         user_username = User.objects.filter(username=data['username'])
         user_email = User.objects.filter(email=data['email'])
-        user_username_email = User.objects.filter(
-            username=data['username'], email=data['email']
-            )
-        print(user_username_email.all())
         if user_email and not user_username:
             raise ValidationError('Error username or emil')
-        if user_username_email:
+        if user_username and not user_email:
             raise ValidationError('Error username or emil')
         return data
 

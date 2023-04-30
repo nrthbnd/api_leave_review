@@ -18,7 +18,7 @@ from .permissions import (IsAdmin, IsAuthorOrModeratorOrAdminOrReadOnly,
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
                           TitleReadSerializer, TitleWriteSerializer,
-                          UserSerializer, ConfirmationSerializer,
+                          UserSerializer, SignupSerializer,
                           TokenSerializer)
 from .viewsets import ListCreateDestroyViewSet
 from .filters import TitleFilter
@@ -28,7 +28,7 @@ from .filters import TitleFilter
 @permission_classes([AllowAny])
 def create_code(request):
     """Отправка confirmation_code на email, введенный при регистрации"""
-    serializer = ConfirmationSerializer(data=request.data)
+    serializer = SignupSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     user = User.objects.get_or_create(
         username=serializer.validated_data['username'],
@@ -79,6 +79,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     lookup_field = 'username'
     pagination_class = PageNumberPagination
+    # http_method_names = ['get', 'post', 'head', 'patch', 'delete']
 
     @action(
         detail=False,
