@@ -1,13 +1,12 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 
-from .validators import validate_year, validate_username
-
-SCORE_LIMIT = [(i, i) for i in range(1, 11)]
+from .validators import validate_username, validate_year
 
 
 class User(AbstractUser):
-    """Модель пользователя"""
+    """Модель пользователя."""
     USER = 'user'
     MODER = 'moderator'
     ADMIN = 'admin'
@@ -60,10 +59,9 @@ class User(AbstractUser):
 
 
 class Genre(models.Model):
-    """Модель жанров"""
+    """Модель жанров."""
     name = models.CharField(max_length=256, verbose_name='Жанр')
     slug = models.SlugField(max_length=50, verbose_name='Адрес')
-# slug = models.SlugField(unique=True)
 
     def __str__(self) -> str:
         return self.name
@@ -74,7 +72,7 @@ class Genre(models.Model):
 
 
 class Category(models.Model):
-    """Модель категорий произведений"""
+    """Модель категорий произведений."""
     name = models.CharField(max_length=256, verbose_name='Категория')
     slug = models.SlugField(max_length=50, unique=True, verbose_name='Адрес')
 
@@ -87,7 +85,7 @@ class Category(models.Model):
 
 
 class Title(models.Model):
-    """Модель произведений"""
+    """Модель произведений."""
     name = models.CharField(max_length=256, unique=True)
     year = models.IntegerField(
         validators=[validate_year],
@@ -96,7 +94,7 @@ class Title(models.Model):
     description = models.TextField(
         'Описание',
         blank=True,
-        help_text='Описанdие произведения',
+        help_text='Описание произведения',
     )
     genre = models.ManyToManyField(
         Genre,
@@ -123,7 +121,7 @@ class Title(models.Model):
 
 
 class GenreTitle(models.Model):
-    """В этой модели связываются название произведения и его жанр"""
+    """В этой модели связываются название произведения и его жанр."""
     genre_id = models.ForeignKey(
         Genre,
         on_delete=models.CASCADE,
@@ -140,7 +138,7 @@ class GenreTitle(models.Model):
 
 
 class Review(models.Model):
-    """Модель отзывов на произведения"""
+    """Модель отзывов на произведения."""
     text = models.TextField(
         verbose_name='Текст отзыва',
         help_text='Текст нового отзывы',
@@ -159,7 +157,12 @@ class Review(models.Model):
         verbose_name='Автор',
         help_text='Что то про автора',
     )
-    score = models.IntegerField(choices=SCORE_LIMIT)
+    score = models.IntegerField(
+        default=1,
+        validators=[
+            MaxValueValidator(10),
+            MinValueValidator(1)
+        ])
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации',
         auto_now_add=True,
@@ -178,7 +181,7 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    """Модель комментариев к отзывам"""
+    """Модель комментариев к отзывам."""
     text = models.TextField(
         verbose_name='Текст комментария',
         help_text='Текст нового комментария',
