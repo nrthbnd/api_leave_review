@@ -134,12 +134,12 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         slug_field='slug',
         many=True
     )
-    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
-        fields = ('id', 'rating', 'name', 'year',
+        fields = ('id', 'name', 'year',
                   'description', 'genre', 'category')
+        read_only_fields = ('id', 'rating')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -160,7 +160,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate_score(self, value):
         """Проверка рейтинга, выставляемого пользователем."""
-        if value < 1 or value > 10:
+        if not (0 < value < 11):
             raise ValidationError(
                 'Рейтинг должен быть от 1 до 10.'
             )
