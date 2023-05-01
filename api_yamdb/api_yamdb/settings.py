@@ -133,3 +133,5 @@ SIMPLE_JWT = {
 }
 
 AUTH_USER_MODEL = 'reviews.User'
+
+EMAIL_HOST_USER = 'user@ya.ru'
