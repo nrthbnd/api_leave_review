@@ -1,9 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 from .validators import validate_year, validate_username
-
-SCORE_LIMIT = [(i, i) for i in range(1, 11)]
 
 
 class User(AbstractUser):
@@ -96,7 +95,7 @@ class Title(models.Model):
     description = models.TextField(
         'Описание',
         blank=True,
-        help_text='Описанdие произведения',
+        help_text='Описание произведения',
     )
     genre = models.ManyToManyField(
         Genre,
@@ -159,7 +158,12 @@ class Review(models.Model):
         verbose_name='Автор',
         help_text='Что то про автора',
     )
-    score = models.IntegerField(choices=SCORE_LIMIT)
+    score = models.IntegerField(
+        default=1,
+        validators=[
+            MaxValueValidator(10),
+            MinValueValidator(1)
+        ])
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации',
         auto_now_add=True,
