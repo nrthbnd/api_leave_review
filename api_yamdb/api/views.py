@@ -28,7 +28,7 @@ from .filters import TitleFilter
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def create_code(request):
-    """Отправка confirmation_code на email, введенный при регистрации"""
+    """Отправка confirmation_code на email, введенный при регистрации."""
     serializer = SignupSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     user, _ = User.objects.get_or_create(
@@ -54,7 +54,7 @@ def create_code(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def token(request):
-    """Отправка токена при получении confirmation_code и username"""
+    """Отправка токена при получении confirmation_code и username."""
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
@@ -70,7 +70,7 @@ def token(request):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """Получение информации о пользователях и ее редактирование"""
+    """Получение информации о пользователях и ее редактирование."""
     queryset = User.objects.all()
     filter_backends = (SearchFilter,)
     search_fields = ('username',)
@@ -95,7 +95,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    """Получает список всех произведений"""
+    """Получает список всех произведений."""
     queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     serializer_class = TitleReadSerializer
     pagination_class = PageNumberPagination
@@ -105,14 +105,14 @@ class TitleViewSet(viewsets.ModelViewSet):
     ordering_fields = ('name',)
 
     def get_serializer_class(self):
-        """Выбор сериализатора в зависимости от метода"""
+        """Выбор сериализатора в зависимости от метода."""
         if self.action in ['list', 'retrieve']:
             return TitleReadSerializer
         return TitleWriteSerializer
 
 
 class CategoryGenreViewSet(ListCreateDestroyViewSet):
-    """Вьюсет для моделей Category и Genre"""
+    """Вьюсет для моделей Category и Genre."""
     pagination_class = PageNumberPagination
     permission_classes = [IsAdminOrReadOnly]
     lookup_field = 'slug'
@@ -131,14 +131,14 @@ class CategoryViewSet(CategoryGenreViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """Вьюсет для комментариев"""
+    """Вьюсет для комментариев."""
     serializer_class = CommentSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,
                           IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
-        """Возвращает из БД объект review и все комментарии к нему"""
+        """Возвращает из БД объект review и все комментарии к нему."""
         review = get_object_or_404(
             Review,
             pk=self.kwargs.get('review_id'),
@@ -149,7 +149,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Сохраняет комементарий с автором и review,
-        полученными из запроса и объектом review"""
+        полученными из запроса и объектом review."""
         review = get_object_or_404(
             Review,
             pk=self.kwargs.get('review_id'),
@@ -159,20 +159,20 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    """Вьюсет для отзывов"""
+    """Вьюсет для отзывов."""
     serializer_class = ReviewSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,
                           IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
-        """Возвращает из БД объект title и все отзывы для него"""
+        """Возвращает из БД объект title и все отзывы для него."""
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         return title.reviews.all()
 
     def perform_create(self, serializer):
         """Сохраняет отзыв с автором и заголовком,
-        полученными из запроса и объектом title"""
+        полученными из запроса и объектом title."""
         title_id = self.kwargs.get('title_id')
         title = get_object_or_404(Title, id=title_id)
         serializer.save(author=self.request.user, title=title)

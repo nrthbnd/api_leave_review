@@ -8,9 +8,11 @@ from reviews.validators import validate_username
 from reviews.models import (Category, Genre, Title,
                             Review, Comment, User)
 
+SLUG_REGEX_VALIDATE = r'^[-a-zA-Z0-9_]+$'
+
 
 class TokenSerializer(serializers.Serializer):
-    """Сериализатор для получения токена"""
+    """Сериализатор для получения токена."""
     username = serializers.CharField(
         required=True,
         max_length=150,
@@ -22,7 +24,7 @@ class TokenSerializer(serializers.Serializer):
 
 
 class SignupSerializer(serializers.Serializer):
-    """Сериализатор для получения confirmation_code"""
+    """Сериализатор для получения confirmation_code."""
     username = serializers.CharField(
         required=True,
         max_length=150,
@@ -46,7 +48,7 @@ class SignupSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания пользователя"""
+    """Сериализатор для создания пользователя."""
     username = serializers.CharField(
         required=True,
         max_length=150,
@@ -70,12 +72,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор для категорий"""
+    """Сериализатор для категорий."""
     name = serializers.CharField(max_length=256, required=True)
     slug = serializers.SlugField(
         max_length=50,
         validators=[
-            RegexValidator(regex=r'^[-a-zA-Z0-9_]+$'),
+            RegexValidator(regex=SLUG_REGEX_VALIDATE),
             UniqueValidator(queryset=Category.objects.all())
         ],
     )
@@ -86,12 +88,13 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    """Сериализатор для жанров"""
+    """Сериализатор для жанров."""
     name = serializers.CharField(max_length=256, required=True)
     slug = serializers.SlugField(
         max_length=50,
         validators=[
-            RegexValidator(regex=r'^[-a-zA-Z0-9_]+$'),
+            RegexValidator(regex=SLUG_REGEX_VALIDATE),
+            UniqueValidator(queryset=Genre.objects.all())
         ],
     )
 
@@ -107,7 +110,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
-    """Сериализатор для SAFE_METHODS к произведениям"""
+    """Сериализатор для SAFE_METHODS к произведениям."""
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
     rating = serializers.IntegerField()
@@ -121,7 +124,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 class TitleWriteSerializer(serializers.ModelSerializer):
     """Сериализатор для добавления и частичного изменения
-     информации о произведении"""
+     информации о произведении."""
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(),
         slug_field='slug'
@@ -140,7 +143,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    """Сериализатор для отзывов"""
+    """Сериализатор для отзывов."""
     title = serializers.SlugRelatedField(
         read_only=True,
         slug_field='name',
@@ -156,7 +159,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
     def validate_score(self, value):
-        """Проверка рейтинга, выставляемого пользователем"""
+        """Проверка рейтинга, выставляемого пользователем."""
         if value < 1 or value > 10:
             raise ValidationError(
                 'Рейтинг должен быть от 1 до 10.'
@@ -164,7 +167,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        """Проверка на однократное создание отзыва"""
+        """Проверка на однократное создание отзыва."""
         request = self.context['request']
         author = request.user
         title_id = self.context['view'].kwargs.get('title_id')
@@ -177,7 +180,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """Сериализатор для комментариев"""
+    """Сериализатор для комментариев."""
     review = serializers.SlugRelatedField(
         read_only=True,
         slug_field='text',

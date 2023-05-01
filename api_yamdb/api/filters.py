@@ -5,7 +5,7 @@ from reviews.models import Title
 class TitleFilter(filters.FilterSet):
     """Определяет фильтры для модели Title:
     name по строке без учета регистра, year в диапазоне дат,
-    genre и category через поле slug"""
+    genre и category через поле slug."""
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
     year = filters.NumberFilter(field_name='year')
     category = filters.CharFilter(field_name="category__slug")

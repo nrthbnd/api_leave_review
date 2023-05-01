@@ -6,7 +6,7 @@ from .validators import validate_year, validate_username
 
 
 class User(AbstractUser):
-    """Модель пользователя"""
+    """Модель пользователя."""
     USER = 'user'
     MODER = 'moderator'
     ADMIN = 'admin'
@@ -59,7 +59,7 @@ class User(AbstractUser):
 
 
 class Genre(models.Model):
-    """Модель жанров"""
+    """Модель жанров."""
     name = models.CharField(max_length=256, verbose_name='Жанр')
     slug = models.SlugField(max_length=50, verbose_name='Адрес')
 
@@ -72,7 +72,7 @@ class Genre(models.Model):
 
 
 class Category(models.Model):
-    """Модель категорий произведений"""
+    """Модель категорий произведений."""
     name = models.CharField(max_length=256, verbose_name='Категория')
     slug = models.SlugField(max_length=50, unique=True, verbose_name='Адрес')
 
@@ -85,7 +85,7 @@ class Category(models.Model):
 
 
 class Title(models.Model):
-    """Модель произведений"""
+    """Модель произведений."""
     name = models.CharField(max_length=256, unique=True)
     year = models.IntegerField(
         validators=[validate_year],
@@ -121,7 +121,7 @@ class Title(models.Model):
 
 
 class GenreTitle(models.Model):
-    """В этой модели связываются название произведения и его жанр"""
+    """В этой модели связываются название произведения и его жанр."""
     genre_id = models.ForeignKey(
         Genre,
         on_delete=models.CASCADE,
@@ -138,7 +138,7 @@ class GenreTitle(models.Model):
 
 
 class Review(models.Model):
-    """Модель отзывов на произведения"""
+    """Модель отзывов на произведения."""
     text = models.TextField(
         verbose_name='Текст отзыва',
         help_text='Текст нового отзывы',
@@ -181,7 +181,7 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    """Модель комментариев к отзывам"""
+    """Модель комментариев к отзывам."""
     text = models.TextField(
         verbose_name='Текст комментария',
         help_text='Текст нового комментария',
