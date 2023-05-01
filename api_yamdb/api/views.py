@@ -1,28 +1,27 @@
-from django.contrib.auth.tokens import default_token_generator
-from django.db.models import Avg
-from django.core.mail import send_mail
 from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.pagination import PageNumberPagination
 from rest_framework import status, viewsets
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.permissions import (AllowAny, IsAuthenticatedOrReadOnly,
-                                        IsAuthenticated)
-
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User
-from .permissions import (IsAdmin, IsAuthorOrModeratorOrAdminOrReadOnly,
-                          IsAdminOrReadOnly)
-from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, ReviewSerializer,
-                          TitleReadSerializer, TitleWriteSerializer,
-                          UserSerializer, SignupSerializer,
-                          TokenSerializer)
-from .viewsets import ListCreateDestroyViewSet
+
 from .filters import TitleFilter
+from .permissions import (IsAdmin, IsAdminOrReadOnly,
+                          IsAuthorOrModeratorOrAdminOrReadOnly)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer, SignupSerializer,
+                          TitleReadSerializer, TitleWriteSerializer,
+                          TokenSerializer, UserSerializer)
+from .viewsets import ListCreateDestroyViewSet, ListCreateUpdateDestroyViewSet
 
 
 @api_view(['POST'])
@@ -69,7 +68,7 @@ def token(request):
     return Response(token_data, status=status.HTTP_200_OK)
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(ListCreateUpdateDestroyViewSet):
     """Получение информации о пользователях и ее редактирование."""
     queryset = User.objects.all()
     filter_backends = (SearchFilter,)
@@ -78,7 +77,6 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     lookup_field = 'username'
     pagination_class = PageNumberPagination
-    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
 
     @action(
         detail=False,
@@ -144,7 +142,6 @@ class CommentViewSet(viewsets.ModelViewSet):
             pk=self.kwargs.get('review_id'),
             title=self.kwargs.get('title_id'),
         )
-        print(review)
         return review.comment.all()
 
     def perform_create(self, serializer):
