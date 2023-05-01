@@ -1,6 +1,7 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django.core.mail import send_mail
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
@@ -30,17 +31,17 @@ def create_code(request):
     """Отправка confirmation_code на email, введенный при регистрации"""
     serializer = SignupSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    user = User.objects.get_or_create(
+    user, _ = User.objects.get_or_create(
         username=serializer.validated_data['username'],
         email=serializer.validated_data['email'],
-    )[0]
+    )
     code = default_token_generator.make_token(user)
     user.confirmation_code = code
     user.save()
     send_mail(
         'Код получения токена',
         f'Ваш код: {code}',
-        'user@ya.ru',
+        settings.EMAIL_HOST_USER,
         [user.email],
         fail_silently=False,
     )
