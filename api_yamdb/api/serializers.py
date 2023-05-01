@@ -34,12 +34,14 @@ class SignupSerializer(serializers.Serializer):
     )
 
     def validate(self, data):
-        user_username = User.objects.filter(username=data['username'])
-        user_email = User.objects.filter(email=data['email'])
-        if user_email and not user_username:
-            raise ValidationError('Error username or emil')
-        if user_username and not user_email:
-            raise ValidationError('Error username or emil')
+        user_by_username = User.objects.filter(
+            username=data['username']
+        ).exists()
+        user_email = User.objects.filter(email=data['email']).exists()
+        if user_email and not user_by_username:
+            raise ValidationError('Вы указали некорректный логин')
+        if user_by_username and not user_email:
+            raise ValidationError('Вы указали некорректную почту')
         return data
 
 
