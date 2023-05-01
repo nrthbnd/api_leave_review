@@ -46,7 +46,7 @@ def create_code(request):
         fail_silently=False,
     )
     return Response(
-        {"email": user.email, "username": user.username},
+        {'email': user.email, 'username': user.username},
         status=status.HTTP_200_OK
     )
 
