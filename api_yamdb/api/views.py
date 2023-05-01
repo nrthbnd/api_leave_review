@@ -69,8 +69,6 @@ def token(request):
     return Response(token_data, status=status.HTTP_200_OK)
 
 
-# @api_view(['POST, GET, PATCH, DELETE'])
-# @action(methods=['get', 'post', 'patch', 'delete'])
 class UserViewSet(viewsets.ModelViewSet):
     """Получение информации о пользователях и ее редактирование"""
     queryset = User.objects.all()
@@ -145,7 +143,6 @@ class CommentViewSet(viewsets.ModelViewSet):
             Review,
             pk=self.kwargs.get('review_id'),
             title=self.kwargs.get('title_id'),
-            # comment=self.kwargs.get('comment_id')
         )
         print(review)
         return review.comment.all()
@@ -171,7 +168,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Возвращает из БД объект title и все отзывы для него"""
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        # print(title.reviews)
         return title.reviews.all()
 
     def perform_create(self, serializer):

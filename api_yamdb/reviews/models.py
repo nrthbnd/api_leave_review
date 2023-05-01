@@ -62,7 +62,6 @@ class Genre(models.Model):
     """Модель жанров"""
     name = models.CharField(max_length=256, verbose_name='Жанр')
     slug = models.SlugField(max_length=50, verbose_name='Адрес')
-# slug = models.SlugField(unique=True)
 
     def __str__(self) -> str:
         return self.name
